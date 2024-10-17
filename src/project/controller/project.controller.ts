@@ -1,8 +1,20 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ProjectService } from '../service/project.service';
 import { AuthGuard } from '../../auth/guard/auth.guard';
 import { ProjectListResponse } from '../dto/project-list-response.dto';
 import { Project } from '@prisma/client';
+import { CreateProjectDto } from '../dto/create-project.dto';
+import { User } from 'src/decorators/user.decorator';
+import { UserPayload } from 'src/auth/types/user-payoad';
 
 @UseGuards(AuthGuard)
 @Controller('project')
@@ -26,5 +38,15 @@ export class ProjectController {
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
     }));
+  }
+
+  @Post()
+  @UsePipes(new ValidationPipe())
+  async createProject(
+    @Body() project: CreateProjectDto,
+    @User() user: UserPayload,
+  ) {
+    const id = await this.projectService.createProject(project, user.sub);
+    return { id };
   }
 }
