@@ -4,17 +4,47 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../lib/prisma';
-import { Prisma, Project } from '@prisma/client';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { ProjectStatus } from '../types/project';
 import { UpdateProjectDto } from '../dto/update-project.dto';
+import { Pagination } from '../types/pagination';
 
 @Injectable()
 export class ProjectService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findMany(args: Prisma.ProjectFindManyArgs): Promise<Project[]> {
-    return this.prismaService.project.findMany(args);
+  async getProjects(userId: number, pagination: Pagination, search?: string) {
+    const filters = {
+      userId,
+      status: { not: ProjectStatus.ARCHIVED },
+    };
+
+    if (search) {
+      filters['OR'] = [
+        { name: { contains: search } },
+        { url: { contains: search } },
+      ];
+    }
+
+    const [projects, total] = await Promise.all([
+      this.prismaService.project.findMany({
+        where: filters,
+        skip: pagination.offset,
+        take: pagination.limit,
+      }),
+      this.prismaService.project.count({ where: filters }),
+    ]);
+
+    const result = {
+      projects,
+      pagination: {
+        total,
+        limit: pagination.limit,
+        offset: pagination.offset,
+      },
+    };
+
+    return result;
   }
 
   async createProject(
