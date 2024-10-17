@@ -8,6 +8,7 @@ import { CreateProjectDto } from '../dto/create-project.dto';
 import { ProjectStatus } from '../types/project';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 import { Pagination } from '../types/pagination';
+import { PROJECT_NOT_ALLOWED, PROJECT_NOT_FOUND } from '../project.constants';
 
 @Injectable()
 export class ProjectService {
@@ -73,13 +74,11 @@ export class ProjectService {
       where: { id },
     });
     if (!project) {
-      throw new NotFoundException('Project not found');
+      throw new NotFoundException(PROJECT_NOT_FOUND);
     }
 
     if (project.userId !== userId) {
-      throw new ForbiddenException(
-        'You are not allowed to update this project',
-      );
+      throw new ForbiddenException(PROJECT_NOT_ALLOWED);
     }
 
     await this.prismaService.project.update({
@@ -98,13 +97,11 @@ export class ProjectService {
       where: { id: projectId },
     });
     if (!project) {
-      throw new NotFoundException('Project not found');
+      throw new NotFoundException(PROJECT_NOT_FOUND);
     }
 
     if (project.userId !== userId) {
-      throw new ForbiddenException(
-        'You are not allowed to update this project',
-      );
+      throw new ForbiddenException(PROJECT_NOT_ALLOWED);
     }
 
     await this.prismaService.project.update({
