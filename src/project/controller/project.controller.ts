@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -61,6 +62,12 @@ export class ProjectController {
     @User() user: UserPayload,
   ) {
     await this.projectService.updateProject(project, +id, user.sub);
+    return { message: 'OK' };
+  }
+
+  @Delete(':id')
+  async deleteProject(@Param('id') id: string, @User() user: UserPayload) {
+    await this.projectService.deleteProject(+id, user.sub);
     return { message: 'OK' };
   }
 }

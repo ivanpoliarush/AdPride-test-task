@@ -62,4 +62,24 @@ export class ProjectService {
       },
     });
   }
+
+  async deleteProject(projectId: number, userId: number) {
+    const project = await this.prismaService.project.findFirst({
+      where: { id: projectId },
+    });
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    if (project.userId !== userId) {
+      throw new ForbiddenException(
+        'You are not allowed to update this project',
+      );
+    }
+
+    await this.prismaService.project.update({
+      where: { id: projectId },
+      data: { status: ProjectStatus.ARCHIVED },
+    });
+  }
 }
