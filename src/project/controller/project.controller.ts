@@ -2,7 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
+  Put,
   Request,
   UseGuards,
   UsePipes,
@@ -15,6 +17,7 @@ import { Project } from '@prisma/client';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { User } from 'src/decorators/user.decorator';
 import { UserPayload } from 'src/auth/types/user-payoad';
+import { UpdateProjectDto } from '../dto/update-project.dto';
 
 @UseGuards(AuthGuard)
 @Controller('project')
@@ -48,5 +51,16 @@ export class ProjectController {
   ) {
     const id = await this.projectService.createProject(project, user.sub);
     return { id };
+  }
+
+  @Put(':id')
+  @UsePipes(new ValidationPipe())
+  async updatePorject(
+    @Body() project: UpdateProjectDto,
+    @Param('id') id: string,
+    @User() user: UserPayload,
+  ) {
+    await this.projectService.updateProject(project, +id, user.sub);
+    return { message: 'OK' };
   }
 }
