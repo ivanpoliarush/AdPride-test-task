@@ -9,6 +9,7 @@ import { ProjectStatus } from '../types/project';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 import { Pagination } from '../types/pagination';
 import { PROJECT_NOT_ALLOWED, PROJECT_NOT_FOUND } from '../project.constants';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ProjectService {
@@ -107,6 +108,24 @@ export class ProjectService {
     await this.prismaService.project.update({
       where: { id: projectId },
       data: { status: ProjectStatus.ARCHIVED },
+    });
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async expireProjects() {
+    const now = new Date();
+    const projects = await this.prismaService.project.findMany({});
+    const expireProjects = projects
+      .filter((project) => {
+        return new Date(project.expiredAt) < now;
+      })
+      .map((project) => project.id);
+
+    await this.prismaService.project.updateMany({
+      where: { id: { in: expireProjects } },
+      data: {
+        status: ProjectStatus.EXPIRED,
+      },
     });
   }
 }
